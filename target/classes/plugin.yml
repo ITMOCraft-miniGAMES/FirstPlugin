@@ -1,0 +1,22 @@
+name: FirstPlugin
+version: '1.0-SNAPSHOT'
+main: thor.FirstPlugin
+api-version: '1.20'
+commands:
+  catacombs:
+    description: a custom command for catacombs
+    permission: FirstPlugin.catacombs
+    usage: /<command> [test]
+  structure:
+    description: manage structures
+    permission: FirstPlugin.structure
+    usage: /<command> [player]
+  tpto:
+    description: tp to nearest player
+    usage: /<command>
+  lobby:
+    description: tp to lobby
+    usage: /<command>
+  create:
+    description: write your room
+    usage: /<command> [name]

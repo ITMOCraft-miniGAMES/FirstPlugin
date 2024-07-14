@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="FirstPlugin:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/FirstPlugin_jar</output-path>
+    <root id="archive" name="FirstPlugin.jar">
+      <element id="module-output" name="FirstPlugin" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/flowpowered/flow-nbt/1.0.1-SNAPSHOT/flow-nbt-1.0.1-20170912.180902-6.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
