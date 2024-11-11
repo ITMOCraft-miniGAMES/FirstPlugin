@@ -1,10 +1,13 @@
 package thor;
 
 import json.JSONObject;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.util.BoundingBox;
 
 public class Portal extends LocalStructure {
@@ -40,10 +43,18 @@ public class Portal extends LocalStructure {
         Player player = event.getPlayer();
         Location from = event.getFrom();
         Location to = event.getTo();
-        if (from.getWorld()!=to.getWorld()) {
+        if (to.getWorld()==FirstPlugin.end&&!player.hasMetadata("water")) {
             BoundingBox box = new BoundingBox(FirstPlugin.x[n] + x, FirstPlugin.y[n] + y, FirstPlugin.z[n] + z, FirstPlugin.x[n] + x + dx, FirstPlugin.y[n] + y + dy, FirstPlugin.z[n] + z + dz);
             if (FirstPlugin.isInBox(from, box) && world == from.getWorld()) {
                 System.out.println(tpto);
+                player.setMetadata("water", new FixedMetadataValue(FirstPlugin.plugin, true));
+                BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
+                scheduler.scheduleSyncDelayedTask(FirstPlugin.plugin, new Runnable() {
+                    @Override
+                    public void run() {
+                        player.removeMetadata("water", FirstPlugin.plugin);
+                    }
+                }, 5L);
                 player.teleport(new Location(tpto.getWorld(), tpto.getX()+FirstPlugin.x[n], tpto.getY()+FirstPlugin.y[n], tpto.getZ()+FirstPlugin.z[n]));
                 event.setCancelled(true);
             }

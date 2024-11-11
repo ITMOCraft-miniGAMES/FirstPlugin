@@ -3,8 +3,10 @@ package thor;
 import json.JSONArray;
 import json.JSONObject;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.player.PlayerChangedWorldEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 
@@ -161,6 +163,12 @@ public class LocalStructure {
                     }
                 }
                 exit[n].setType(2, qx, qy, 0);
+                if (exitData.has("block_name")) {
+                    exit[n].name=exitData.getString("block_name");
+                }
+                else {
+                    exit[n].name="chest";
+                }
             }
         }
         if (!room.isNull("barrels")) {
@@ -184,6 +192,12 @@ public class LocalStructure {
                     }
                 }
                 exit[n].setType(3, qx, qy, 0);
+                if (exitData.has("block_name")) {
+                    exit[n].name=exitData.getString("block_name");
+                }
+                else {
+                    exit[n].name="barrel";
+                }
             }
         }
         if (!room.isNull("spawn_player")) {
@@ -249,7 +263,19 @@ public class LocalStructure {
                 qy = coords.getInt(1);
                 qz = coords.getInt(2);
                 int n = qy * dx * dz + qz * dx + qx;
-                exit[n].setType(9, 0, 0, 0);
+                qy = 0;
+                qx=0;
+                qz=0;
+                if (!exitData.isNull("probability")) {
+                    double probability = exitData.getDouble("probability");
+                    if (probability != 1) {
+                        int prob = (int) (probability*1000);
+                        qz=prob%10;
+                        qy=(prob/10)%10;
+                        qx=prob/100;
+                    }
+                }
+                exit[n].setType(9, qx, qy, qz);
             }
         }
         exit[0].base=true;
@@ -333,6 +359,12 @@ public class LocalStructure {
 
     }
     public void onPortal(PlayerTeleportEvent event, int n) {
+
+    }
+    public void onExplosion(EntityExplodeEvent eEvent, BlockExplodeEvent bEvent, int n) {
+
+    }
+    public void onHangingBreak(HangingBreakEvent event, int n) {
 
     }
 }

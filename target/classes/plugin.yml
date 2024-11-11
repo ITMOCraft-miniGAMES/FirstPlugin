@@ -14,9 +14,15 @@ commands:
   tpto:
     description: tp to nearest player
     usage: /<command>
+  info:
+    description: show info about an item
+    usage: /<command>
   lobby:
     description: tp to lobby
     usage: /<command>
   create:
     description: write your room
     usage: /<command> [name]
+  expand:
+    description: advice to expand waiting time
+    usage: /<command> [time]

@@ -9,17 +9,18 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.ItemFrame;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.util.BoundingBox;
 
 public class Shop extends LocalStructure {
     public LocalBlock[] iconBlock = new LocalBlock[4];
@@ -153,9 +154,37 @@ public class Shop extends LocalStructure {
         Block block = event.getBlock();
         Location loc = block.getLocation();
         for (int i = 0; i < iconBlock.length; i++) {
-            if (iconBlock[i].X+FirstPlugin.x[n]==loc.getBlockX()&&iconBlock[i].Y+FirstPlugin.y[n]==loc.getBlockY()&&iconBlock[i].Z+FirstPlugin.z[n]==loc.getBlockZ()) {
+            if (iconBlock[i].X+FirstPlugin.x[n]-1==loc.getBlockX()&&iconBlock[i].Y+FirstPlugin.y[n]==loc.getBlockY()&&iconBlock[i].Z+FirstPlugin.z[n]==loc.getBlockZ()) {
                 event.setCancelled(true);
             }
+        }
+    }
+    @Override
+    public void onExplosion(EntityExplodeEvent eEvent, BlockExplodeEvent bEvent, int n) {
+        Location loc;
+        if (eEvent!=null) {
+            loc = eEvent.getLocation();
+        }
+        else {
+            loc=bEvent.getBlock().getLocation();
+        }
+        BoundingBox box = new BoundingBox(FirstPlugin.x[n] + x, FirstPlugin.y[n] + y, FirstPlugin.z[n] + z, FirstPlugin.x[n] + x + dx, FirstPlugin.y[n] + y + dy, FirstPlugin.z[n] + z + dz);
+        if (FirstPlugin.isInBox(loc, box)) {
+            if (eEvent!=null) {
+                eEvent.setCancelled(true);
+            }
+            else {
+                bEvent.setCancelled(true);
+            }
+        }
+    }
+    @Override
+    public void onHangingBreak(HangingBreakEvent event, int n) {
+        Hanging hanging = event.getEntity();
+        Location loc = hanging.getLocation();
+        BoundingBox box = new BoundingBox(FirstPlugin.x[n] + x, FirstPlugin.y[n] + y, FirstPlugin.z[n] + z, FirstPlugin.x[n] + x + dx, FirstPlugin.y[n] + y + dy, FirstPlugin.z[n] + z + dz);
+        if (FirstPlugin.isInBox(loc, box)) {
+            event.setCancelled(true);
         }
     }
 }

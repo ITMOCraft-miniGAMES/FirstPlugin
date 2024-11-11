@@ -21,6 +21,8 @@ import java.util.HashMap;
 import java.util.Scanner;
 
 public class Generation {
+    public static int size = 20;
+    boolean loaded = false;
     World world;
     String[][] advancedStructures;
     HashMap<String, JSONObject> rooms = new HashMap<>();
@@ -76,9 +78,9 @@ public class Generation {
         foodSumm=0;
         number=0;
         this.gameMode=gameMode;
-        tpY = new int[10];
-        tpX = new int[10];
-        tpZ = new int[10];
+        tpY = new int[size];
+        tpX = new int[size];
+        tpZ = new int[size];
         File folder = new File(inputPath+"JSON");
         if (gameMode==1) {
             folder=new File(inputPath+"Lavawars");
@@ -335,7 +337,7 @@ public class Generation {
                 kWater++;
             }
         }
-        k=k+(int) (10+Math.random()*10);
+        k=k+(int) (5+Math.random()*5);
         while (kWater<k&&c<100000) {
             c++;
             int x = (int) (Math.random()*254+1);
@@ -363,7 +365,7 @@ public class Generation {
                 }
             }
         }
-        for (int i = 1; i <= 10; i++) {
+        for (int i = 1; i <= size; i++) {
             boolean b = false;
             k = 0;
             int j = (int) (Math.random() * kB);
@@ -390,11 +392,11 @@ public class Generation {
     public LocalStructure spawn(JSONObject room) throws IOException {
         String name = room.getString("name");
         return switch (name) {
-            case "teleport" -> new Teleport(room, kStr);
+            case "teleport", "netherTeleport" -> new Teleport(room, kStr);
             case "shop" -> new Shop(room);
             case "levitation" -> new Levitation(room);
             case "little" -> new Little(room);
-            case "portal", "waterPortal" -> new Portal(room);
+            case "portal", "waterPortal", "netherPortal" -> new Portal(room);
             default -> new LocalStructure(room);
         };
     }
@@ -411,7 +413,7 @@ public class Generation {
         Block block = event.getClickedBlock();
         if (block.getType()== Material.OAK_BUTTON&&FirstPlugin.x[n]+arenaButton.getBlockX()==block.getX()&&FirstPlugin.y[n]+arenaButton.getBlockY()==block.getY()&&FirstPlugin.z[n]+arenaButton.getBlockZ()==block.getZ()) {
             Player player = event.getPlayer();
-            if (player.hasMetadata("arena")) {
+            if (player.hasMetadata("arena")&&FirstPlugin.backCount[n]>0) {
                 Location loc = (Location) player.getMetadata("arena").get(0).value();
                 player.teleport(loc);
                 player.removeMetadata("arena", FirstPlugin.plugin);
@@ -422,6 +424,12 @@ public class Generation {
         Block block = event.getBlock();
         if (block.getType()== Material.OAK_BUTTON&&FirstPlugin.x[n]+arenaButton.getBlockX()==block.getX()&&FirstPlugin.y[n]+arenaButton.getBlockY()==block.getY()&&FirstPlugin.z[n]+arenaButton.getBlockZ()==block.getZ()) {
             event.setCancelled(true);
+        }
+    }
+    public void arenaButton(int n) {
+        Block block = world.getBlockAt(new Location(world, FirstPlugin.x[n]+arenaButton.getBlockX(), FirstPlugin.y[n]+arenaButton.getBlockY(), FirstPlugin.z[n]+arenaButton.getBlockZ()));
+        if (!(block.getType()==Material.OAK_BUTTON)) {
+            block.setType(Material.OAK_BUTTON);
         }
     }
     public void updateStructures(File folder) {
@@ -453,11 +461,11 @@ public class Generation {
             else {
                 JSONArray exitsInfo = room.getJSONArray("exits");
                 JSONObject portInfo = exitsInfo.getJSONObject(0);
-                exitsInfo = portInfo.getJSONArray("offset");
-                if (exitsInfo.getInt(0)!=0) {
+                String name = room.getString("name");
+                if (name.charAt(name.length()-1)=='X') {
                     advIndex=2;
                 }
-                else if (exitsInfo.getInt(1)!=0) {
+                else if (name.charAt(name.length()-1)=='Y') {
                     advIndex=3;
                 }
                 else {
