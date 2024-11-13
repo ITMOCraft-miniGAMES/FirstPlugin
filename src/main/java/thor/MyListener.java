@@ -39,6 +39,9 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Collection;
 
+import static thor.FirstPlugin.BEGINBLOCKBREAK;
+import static thor.FirstPlugin.limit;
+
 public class MyListener implements Listener {
     public static boolean bomber = false;
     public static boolean bomberArrow = false;
@@ -48,7 +51,7 @@ public class MyListener implements Listener {
         Player player = event.getPlayer();
         Action action = event.getAction();
         if (block!=null) {
-            for (int j = 0; j < FirstPlugin.limit; j++) {
+            for (int j = 0; j < limit; j++) {
                 if (FirstPlugin.map[j]!=null) {
                     FirstPlugin.map[j].onTap(event, j);
                 }
@@ -143,8 +146,8 @@ public class MyListener implements Listener {
                 FirstPlugin.updatePlayers(player);
                 FirstPlugin.updateObservers(player);
                 n++;
-                if (n%(FirstPlugin.limit/2)==0) {
-                    n-=(FirstPlugin.limit/2);
+                if (n%(limit/2)==0) {
+                    n-=(limit/2);
                 }
                 FirstPlugin.tptoCatacombs(player, n);
             }
@@ -259,7 +262,7 @@ public class MyListener implements Listener {
     }
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
-        for (int j = 0; j < 10; j++) {
+        for (int j = 0; j < limit; j++) {
             if (FirstPlugin.map[j]!=null) {
                 FirstPlugin.map[j].onBlockBreak(event, j);
             }
@@ -269,12 +272,13 @@ public class MyListener implements Listener {
         }
         Player player = event.getPlayer();
         Block block = event.getBlock();
-        if (player.hasMetadata("inGame")) {
-            if (block.getType().equals(Material.STONE) && block.hasMetadata("canBreak")&&player.getMetadata("inGame").get(0).equals(new FixedMetadataValue(FirstPlugin.plugin, true))) {
+        if (player.hasMetadata("inGame")&&block.getType()==Material.STONE) {
+            int n = player.getMetadata("game").get(0).asInt();
+            if (FirstPlugin.backCount[n]>BEGINBLOCKBREAK) {
                 event.setCancelled(true);
             }
         }
-        if (!player.hasMetadata("inGame")&&!player.isOp()) {
+        if (!player.hasMetadata("inGame")&&!player.isOp()&&(player.getWorld()==FirstPlugin.world||player.getWorld()==FirstPlugin.nether)) {
             event.setCancelled(true);
         }
         if (block.getType().equals(Material.BEDROCK)&&player.hasMetadata("creating")) {
@@ -294,7 +298,7 @@ public class MyListener implements Listener {
         EntityType entityType = entity.getType();
         EntityType damagerType = damager.getType();
         if (entityType == EntityType.ITEM_FRAME) {
-            for (int j = 0; j < 10; j++) {
+            for (int j = 0; j < limit; j++) {
                 for (int i = 0; i < FirstPlugin.kStr[j]; i++) {
                     FirstPlugin.customStr[i][j].onEntityDamage(event, j);
                 }
@@ -672,7 +676,7 @@ public class MyListener implements Listener {
         if (player.hasMetadata("inGame")&&(event.getTo().getWorld()==FirstPlugin.end)) {
             event.setCancelled(true);
         }
-        for (int j = 0; j < FirstPlugin.limit; j++) {
+        for (int j = 0; j < limit; j++) {
             for (int i = 0; i < FirstPlugin.kStr[j]; i++) {
                 FirstPlugin.customStr[i][j].onPortal(event, j);
             }
@@ -680,7 +684,7 @@ public class MyListener implements Listener {
     }
     @EventHandler
     public void onEntityExplosion(EntityExplodeEvent event) {
-        for (int j = 0; j < FirstPlugin.limit; j++) {
+        for (int j = 0; j < limit; j++) {
             for (int i = 0; i < FirstPlugin.kStr[j]; i++) {
                 FirstPlugin.customStr[i][j].onExplosion(event, null, j);
             }
@@ -688,7 +692,7 @@ public class MyListener implements Listener {
     }
     @EventHandler
     public void onBlockExplosion(BlockExplodeEvent event) {
-        for (int j = 0; j < FirstPlugin.limit; j++) {
+        for (int j = 0; j < limit; j++) {
             for (int i = 0; i < FirstPlugin.kStr[j]; i++) {
                 FirstPlugin.customStr[i][j].onExplosion(null, event, j);
             }
@@ -725,7 +729,7 @@ public class MyListener implements Listener {
     }
     @EventHandler
     public void onHangingBreak(HangingBreakEvent event) {
-        for (int j = 0; j < FirstPlugin.limit; j++) {
+        for (int j = 0; j < limit; j++) {
             for (int i = 0; i < FirstPlugin.kStr[j]; i++) {
                 FirstPlugin.customStr[i][j].onHangingBreak(event, j);
             }

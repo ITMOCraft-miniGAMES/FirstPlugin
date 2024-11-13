@@ -6,7 +6,6 @@ import json.JSONArray;
 import json.JSONObject;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.md_5.bungee.api.chat.BaseComponent;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.*;
@@ -22,12 +21,11 @@ import org.bukkit.entity.*;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerFishEvent;
-import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.*;
-import org.bukkit.loot.LootTable;
-import org.bukkit.material.MaterialData;
+import org.bukkit.inventory.meta.BookMeta;
+import org.bukkit.inventory.meta.EnchantmentStorageMeta;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -91,6 +89,7 @@ public final class FirstPlugin extends JavaPlugin {
     public static ArrayList<String> russians = new ArrayList<>();
     public static HashMap<String, String> itemInfo = new HashMap<>();
     public static HashMap<String, CharacterClass> classesInfo = new HashMap<>();
+    public static int BEGINBLOCKBREAK = 1500;
 
     public static void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         Entity entity = event.getEntity();
@@ -463,6 +462,12 @@ public final class FirstPlugin extends JavaPlugin {
         scheduler.scheduleSyncRepeatingTask(this, new Runnable() {
             @Override
             public void run() {
+                try {
+                    iterPlayers(getServer().getOnlinePlayers());
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
                 for (int i = 0; i < kSpells; i++) {
                     for (int j = 0; j < spells[i].size(); j++) {
                         int t = times[i].get(j);
@@ -545,10 +550,12 @@ public final class FirstPlugin extends JavaPlugin {
                     Material material = itemStack.getType();
                     short max = material.getMaxDurability();
                     String s = material.name().toLowerCase()+data;
+                    //System.out.println(s);
                     if (cooldownTime.containsKey(s)) {
                         short d = (short) ((double)max/cooldownTime.get(s));
                         if (itemStack.getDurability()-d>0) {
                             itemStack.setDurability((short) (itemStack.getDurability() - d));
+                            //System.out.println(itemStack.getDurability());
                         }
                         else {
                             itemStack.setDurability((short) 0);
@@ -557,7 +564,7 @@ public final class FirstPlugin extends JavaPlugin {
                         }
                     }
                     else {
-                        plugin.getServer().sendMessage(Component.text(ChatColor.RED+"Error 999 by using the wand, please tell it to administration!"));
+                        //plugin.getServer().sendMessage(Component.text(ChatColor.RED+"Error 999 by using the wand, please tell it to administration!"));
                         cooldown.remove(i);
                         i--;
                     }
@@ -565,41 +572,6 @@ public final class FirstPlugin extends JavaPlugin {
                 for (int i = 0; i < backCount.length; i++) {
                     if (map[i]!=null) {
                         map[i].arenaButton(i);
-                    }
-                    for (int j = 0; j < players[i].size(); j++) {
-                        try {
-                            Player player = players[i].get(j);
-                            ItemStack itemStack = player.getItemInHand();
-                            if (itemStack.getType()==Material.FISHING_ROD&&itemStack.getItemMeta().hasCustomModelData()&&itemStack.getItemMeta().getCustomModelData()==4) {
-                                player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 200, 1));
-                            }
-                        }
-                        catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        /*
-                        try {
-                            if (players[i].get(j).hasMetadata("compass")) {
-                                Player target = (Player) players[i].get(j).getMetadata("compass").get(0).value();
-                                Inventory inv = players[i].get(j).getInventory();
-                                //System.out.println("compass");
-                                if (inv.contains(Material.COMPASS)) {
-                                    int index = inv.first(Material.COMPASS);
-                                    ItemStack itemStack = new ItemStack(Material.COMPASS);
-                                    CompassMeta meta = (CompassMeta) itemStack.getItemMeta();
-                                    //System.out.println(target);
-                                    meta.setLodestoneTracked(true);
-                                    meta.setLodestone(target.getLocation());
-                                    itemStack.setItemMeta(meta);
-                                    inv.setItem(index, itemStack);
-                                }
-                            }
-                        }
-                        catch (Exception e) {
-                            e.printStackTrace();
-                        }
-
-                         */
                     }
                     if (backCount[i]>0&&!isGame[i]) {
                         for (int j = 0; j < players[i].size(); j++) {
@@ -651,7 +623,7 @@ public final class FirstPlugin extends JavaPlugin {
                         backCount[i]--;
                         String s = backCount[i]/60+":"+backCount[i]%60+" Kills";
                         objectives[i].setDisplayName(s);
-                        if (backCount[i]==1500) {
+                        if (backCount[i]==BEGINBLOCKBREAK) {
                             canBreak[i]=true;
                             for (int j = 0; j < players[i].size(); j++) {
                                 players[i].get(j).setMetadata("inGame", new FixedMetadataValue(plugin, false));
@@ -822,7 +794,8 @@ public final class FirstPlugin extends JavaPlugin {
         }
     }
     public static boolean canDamage(Player player) {
-        return !(!player.hasMetadata("inGame")&&!player.hasMetadata("tower")||player.getLocation().getWorld()==world);
+        World world1 = player.getLocation().getWorld();
+        return !(!player.hasMetadata("inGame")&&(world1==world||world1==nether));
     }
     public static boolean canUseItem(Player player, ItemStack itemStack) {
         if (player.hasMetadata("class")&&itemStack.getType()!=Material.AIR) {
@@ -1504,7 +1477,6 @@ public final class FirstPlugin extends JavaPlugin {
                 else if (entity==null) {
                     world.spawnEntity(pr.getLocation(), EntityType.LIGHTNING);
                     if (!pr.hasMetadata("reflectThor")) {
-                        owner.setMetadata("reflectThor", new FixedMetadataValue(plugin, itemStack));
                         System.out.println("reflecting");
                         Location loc1 = pr.getLocation();
                         Vector direction = loc1.getDirection();
@@ -1523,6 +1495,8 @@ public final class FirstPlugin extends JavaPlugin {
                         trident.setMetadata("itemStack", new FixedMetadataValue(plugin, pr.getMetadata("itemStack").get(0).value()));
                     }
                     else {
+                        owner.setMetadata("reflectThor", new FixedMetadataValue(plugin, itemStack));
+                        pr.remove();
                         giveItems(owner, itemStack);
                     }
                 }
@@ -1891,6 +1865,32 @@ public final class FirstPlugin extends JavaPlugin {
         }
         return false;
     }
+    public static void iterPlayers(Collection<? extends Player> playerCollection) {
+        for (Player player: playerCollection) {
+            Inventory inv = player.getInventory();
+            ItemStack[] itemStacks = inv.getContents();
+            for (int i = 0; i < itemStacks.length; i++) {
+                if (itemStacks[i]!=null) {
+                    tryToAddCoolDown(itemStacks[i]);
+                }
+            }
+            ItemStack itemStack = player.getItemInHand();
+            if (itemStack.getType()==Material.FISHING_ROD&&itemStack.getItemMeta().hasCustomModelData()&&itemStack.getItemMeta().getCustomModelData()==4) {
+                player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, 200, 1));
+            }
+        }
+    }
+    public static void tryToAddCoolDown(ItemStack itemStack) {
+        if (itemStack.getDurability()!=0&&itemStack.hasItemMeta()) {
+            ItemMeta meta = itemStack.getItemMeta();
+            if (meta.hasCustomModelData()&&!cooldown.contains(itemStack)) {
+                String name = itemStack.getType().name().toLowerCase()+meta.getCustomModelData();
+                if (cooldownTime.containsKey(name)) {
+                    cooldown.add(itemStack);
+                }
+            }
+        }
+    }
     public static void onFishing(PlayerFishEvent event) {
         Player player = event.getPlayer();
         if (event.getState()== PlayerFishEvent.State.FISHING) {
@@ -1952,10 +1952,9 @@ public final class FirstPlugin extends JavaPlugin {
                     }
                 }
             }
-        }
-        else {
-            player.sendMessage(ChatColor.RED+translate("This wand is rechargeable", player));
-            event.setCancelled(true);
+            else {
+                player.sendMessage(ChatColor.RED+translate("This wand is rechargeable", player));
+            }
         }
     }
     public static void byCreating(Block block, Player player) {
@@ -2203,7 +2202,6 @@ public final class FirstPlugin extends JavaPlugin {
                                 if (!(block.getType() ==Material.STONE)) {
                                     block.setType(Material.STONE);
                                 }
-                                block.setMetadata("canBreak", new FixedMetadataValue(plugin, false));
                             }
                         }
                     }
@@ -2217,7 +2215,6 @@ public final class FirstPlugin extends JavaPlugin {
                             if (!(block.getType()==Material.AIR)) {
                                 block.setType(Material.AIR);
                             }
-                            block.setMetadata("canBreak", new FixedMetadataValue(plugin, false));
                         }
                     }
                 }
