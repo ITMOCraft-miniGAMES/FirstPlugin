@@ -90,6 +90,7 @@ public final class FirstPlugin extends JavaPlugin {
     public static HashMap<String, String> itemInfo = new HashMap<>();
     public static HashMap<String, CharacterClass> classesInfo = new HashMap<>();
     public static int BEGINBLOCKBREAK = 1500;
+    public static Scoreboard fake;
 
     public static void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         Entity entity = event.getEntity();
@@ -184,6 +185,7 @@ public final class FirstPlugin extends JavaPlugin {
             tObservers[i]=new ArrayList<>();
         }
         plugin=this;
+        fake = Bukkit.getScoreboardManager().getNewScoreboard();
         world = Bukkit.getWorld("world");
         world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
         world.setGameRule(GameRule.DO_WEATHER_CYCLE, false);
@@ -197,7 +199,6 @@ public final class FirstPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new MyListener(), this);
         logger = getLogger();
         arenaCoords = new Location(world, 512, 0, 512);
-        //spawnProtect();
         try {
             for (int i = 0; i < limit; i++) {
                 updateSign(i);
@@ -333,11 +334,10 @@ public final class FirstPlugin extends JavaPlugin {
         catch (Exception e) {
             e.printStackTrace();
         }
-        /*
         try {
             PrintStream in = new PrintStream("/home/container/plugins/ChunkLoader/data.yml");
             in.println("chunks-list:");
-            for (int i = 0; i <=3; i++) {
+            for (int i = -3; i <=3; i++) {
                 int r = (i*10000)/16;
                 int l = (i*10000+256)/16;
                 for (int j = r; j <= l; j++) {
@@ -346,19 +346,18 @@ public final class FirstPlugin extends JavaPlugin {
                     }
                 }
             }
-            for (int i = -3; i <= 0; i++) {
+            for (int i = -3; i <= -1; i++) {
                 int r = (i*10000)/16;
                 int l = (i*10000+512)/16;
                 for (int j = r; j <= l; j++) {
                     for (int k = r; k <= l; k++) {
-                        in.println("- " + j + ";" + k + ";world_nether");
+                        in.println("- " + j + ";" + k + ";lavawars");
                     }
                 }
             }
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
-        */
         /*
         int n = 1;
         try {
@@ -627,7 +626,12 @@ public final class FirstPlugin extends JavaPlugin {
                             canBreak[i]=true;
                             for (int j = 0; j < players[i].size(); j++) {
                                 players[i].get(j).setMetadata("inGame", new FixedMetadataValue(plugin, false));
-                                players[i].get(j).sendTitle(new Title(translate("Now you can break stone", players[i].get(j))));
+                                if (i<limit/2) {
+                                    players[i].get(j).sendTitle(new Title(translate("Now you can break stone", players[i].get(j))));
+                                }
+                                else {
+                                    players[i].get(j).sendTitle(new Title("Всем выдано яйцо, указывающее на игроков"));
+                                }
                                 Inventory inv = players[i].get(j).getInventory();
                                 ItemStack itemStack = new ItemStack(Material.EGG);
                                 ItemMeta meta =  itemStack.getItemMeta();
@@ -1141,6 +1145,7 @@ public final class FirstPlugin extends JavaPlugin {
         }
         else {
             observers[n].add(player);
+            player.setScoreboard(scoreboard[n]);
             player.setMetadata("observer", new FixedMetadataValue(plugin, n));
             player.sendMessage(translate("Use the command /tpto to teleport to some player", player));
             player.setMetadata("observer", new FixedMetadataValue(plugin, true));
@@ -1198,6 +1203,23 @@ public final class FirstPlugin extends JavaPlugin {
         itemStack.setItemMeta(meta);
         itemStack.addUnsafeEnchantment(Enchantment.VANISHING_CURSE, 1);
         inv.addItem(itemStack);
+        if (player.isOp()) {
+            itemStack = new ItemStack(Material.RED_DYE);
+            meta = itemStack.getItemMeta();
+            meta.setDisplayName(ChatColor.GREEN + "Играть в тнтран");
+            meta.setCustomModelData(1);
+            itemStack.setItemMeta(meta);
+            itemStack.addUnsafeEnchantment(Enchantment.VANISHING_CURSE, 1);
+            inv.addItem(itemStack);
+
+            itemStack = new ItemStack(Material.AMETHYST_SHARD);
+            meta = itemStack.getItemMeta();
+            meta.setDisplayName(ChatColor.GREEN + "Играть в UHC");
+            meta.setCustomModelData(1);
+            itemStack.setItemMeta(meta);
+            itemStack.addUnsafeEnchantment(Enchantment.VANISHING_CURSE, 1);
+            inv.addItem(itemStack);
+        }
 
         itemStack = new ItemStack(Material.YELLOW_DYE);
         meta = itemStack.getItemMeta();
@@ -1337,6 +1359,9 @@ public final class FirstPlugin extends JavaPlugin {
             public void run() {
                 flushPlayer(winner);
                 winner.removeMetadata("game", plugin);
+                for (Player player: observers[n]) {
+                    updateObservers(player);
+                }
                 observers[n].clear();
                 players[n].clear();
                 isGame[n]=false;
@@ -1525,6 +1550,7 @@ public final class FirstPlugin extends JavaPlugin {
                 quited.removeMetadata("game", plugin);
                 try {
                     scoreboard[n].resetScores(quited);
+                    quited.setScoreboard(fake);
                 }
                 catch (Exception ignored) {
 
@@ -1557,6 +1583,13 @@ public final class FirstPlugin extends JavaPlugin {
         if (quited.hasMetadata("observer")) {
             int n = quited.getMetadata("observer").get(0).asInt();
             observers[n].remove(quited);
+            try {
+                scoreboard[n].resetScores(quited);
+                quited.setScoreboard(fake);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
             quited.removeMetadata("observer", plugin);
         }
         if (quited.hasMetadata("tObserver")) {

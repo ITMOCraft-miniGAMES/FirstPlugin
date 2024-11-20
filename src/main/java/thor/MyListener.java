@@ -130,7 +130,7 @@ public class MyListener implements Listener {
                     FirstPlugin.autoBegin(player, 1);
                 }
             }
-            else if (data==1&&(material==Material.BLUE_DYE||material==Material.RED_DYE)&& isRMB) {
+            else if (data==1&&(material==Material.BLUE_DYE||material==Material.YELLOW_DYE)&& isRMB) {
                 if (material==Material.BLUE_DYE) {
                     FirstPlugin.autoObserve(player, 0);
                 }
@@ -305,11 +305,11 @@ public class MyListener implements Listener {
             }
         }
         if (damager.getType()==EntityType.PLAYER) {
-            if (entityType==EntityType.PLAYER&&!entity.hasMetadata("inGame")) {
-                event.setCancelled(true);
-            }
             Player player = (Player) damager;
             ItemStack itemStack = player.getItemInHand();
+            if (player.hasMetadata("monk")||!FirstPlugin.canDamage(player)) {
+                event.setCancelled(true);
+            }
             if (itemStack.hasItemMeta()) {
                 ItemMeta meta = itemStack.getItemMeta();
                 int data = 0;
